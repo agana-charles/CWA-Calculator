@@ -11,7 +11,7 @@
   --bg:#f3f5f1; --surface:#ffffff; --sunk:#e8ece5; --line:#d5dbd1;
   --ink:#16201b; --muted:#5d6a62;
   --band:#123b30; --band-ink:#eef4ef; --band-muted:#a9c2b6;
-  --accent:#c98a12; --accent-ink:#1d1405; --accent-soft:#f6e7c6;
+  --accent:#c98a12; --accent-hi:#f5cf6a; --accent-ink:#1d1405; --chip-bg:#0a1d17; --chip:#0d2a21; --grid-line:rgba(245,207,106,.06); --accent-soft:#f6e7c6;
   --first:#1f8a5b; --upper:#3f7fbf; --lower:#8a6fc4; --pass:#c27a2c; --fail:#c2453b;
   --focus:#c98a12;
   --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
@@ -190,7 +190,17 @@ td input.bad{border-color:var(--fail)}
 .formula{font-family:var(--f-num);font-size:13px;background:var(--sunk);padding:10px 12px;border-radius:8px;overflow-x:auto;white-space:nowrap}
 
 footer{color:var(--muted);font-size:13px}
-footer .wrap{padding-block:0 32px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+footer .wrap{padding-block:0 24px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.credit{background-color:var(--chip-bg);color:var(--band-ink);background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:24px 24px;border-top:1px solid color-mix(in srgb,var(--accent) 45%, transparent);position:relative}
+.credit .wrap{padding-block:26px;display:flex;align-items:center;justify-content:space-between;gap:14px 24px;flex-wrap:wrap}
+.credit-mark{display:flex;align-items:center;gap:16px}
+.credit-logo{width:60px;height:60px;flex:none;overflow:visible;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent-hi) 45%, transparent))}
+.credit-logo .pin{fill:var(--accent)}
+.credit-by{font-family:var(--f-num);font-size:12px;color:var(--band-muted);letter-spacing:.02em}
+.credit-name{font-family:var(--f-num);font-weight:700;font-size:clamp(17px,3vw,23px);letter-spacing:.04em;line-height:1.2;display:flex;align-items:center;flex-wrap:wrap;gap:0 .4em}
+.credit-name span{color:var(--accent-hi);text-shadow:0 0 14px color-mix(in srgb,var(--accent-hi) 55%, transparent)}
+.credit small{color:var(--band-muted);font-size:12px;font-family:var(--f-num)}
+.credit small b{color:var(--accent-hi);font-weight:500}
 
 /* Import sheet */
 .overlay{position:fixed;inset:0;background:rgba(5,12,9,.55);z-index:50;display:grid;place-items:center;padding:max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
@@ -356,7 +366,25 @@ details.paste textarea{width:100%;min-height:120px;margin-top:10px;border:1px so
 <footer><div class="wrap">
   <span>Your courses and marks stay in this browser. Nothing is sent to a server.</span>
   <span>Unofficial student tool. Check your official results on the student portal.</span>
-</div></footer>
+</div>
+<div class="credit"><div class="wrap">
+  <div class="credit-mark">
+    <svg class="credit-logo" viewBox="0 0 60 60" aria-hidden="true">
+      <defs><clipPath id="agCore"><rect x="15" y="15" width="30" height="30" rx="3"/></clipPath></defs>
+      <rect class="pin" x="20.5" y="3" width="3" height="7" rx="1"/><rect class="pin" x="20.5" y="50" width="3" height="7" rx="1"/>
+      <rect class="pin" x="3" y="20.5" width="7" height="3" rx="1"/><rect class="pin" x="50" y="20.5" width="7" height="3" rx="1"/>
+      <rect class="pin" x="28.5" y="3" width="3" height="7" rx="1"/><rect class="pin" x="28.5" y="50" width="3" height="7" rx="1"/>
+      <rect class="pin" x="3" y="28.5" width="7" height="3" rx="1"/><rect class="pin" x="50" y="28.5" width="7" height="3" rx="1"/>
+      <rect class="pin" x="36.5" y="3" width="3" height="7" rx="1"/><rect class="pin" x="36.5" y="50" width="3" height="7" rx="1"/>
+      <rect class="pin" x="3" y="36.5" width="7" height="3" rx="1"/><rect class="pin" x="50" y="36.5" width="7" height="3" rx="1"/>
+      <rect x="9" y="9" width="42" height="42" rx="7" style="fill:var(--chip);stroke:var(--accent)" stroke-width="2"/>
+      <rect x="15" y="15" width="30" height="30" rx="3" fill="none" style="stroke:var(--accent-hi)" stroke-opacity=".35" stroke-dasharray="2 2"/>
+      <circle cx="18.5" cy="18.5" r="1.4" style="fill:var(--accent-hi)"/>
+      <text x="30" y="38.5" text-anchor="middle" font-family="JetBrains Mono, ui-monospace, monospace" font-weight="700" font-size="20" style="fill:var(--accent-hi)">A</text>
+    </svg>
+    <div><div class="credit-name">AGAN'S <span>TECHNOLOGIES</span></div></div>
+  </div>
+</div></div></footer>
 
 <!-- Import sheet -->
 <div class="overlay" id="importOverlay" hidden>
@@ -1021,6 +1049,7 @@ $("impSave").addEventListener("click", function(){
 
 /* expose the parser for testing */
 window.__cwa = {parseCourses: parseCourses, agg: agg, planCalc: planCalc};
+try{ document.getElementById("yr").textContent = new Date().getFullYear(); }catch(e){}
 renderAll();
 })();
 </script>
