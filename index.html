@@ -143,6 +143,44 @@ td input.bad{border-color:var(--fail)}
 .field-row{display:flex;gap:12px;flex-wrap:wrap}
 .field{display:grid;gap:4px;font-size:13px;color:var(--muted);flex:1 1 140px}
 .field input,.field select{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 10px;color:var(--ink);font-family:var(--f-num)}
+.planner .plan-head{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:18px;border-bottom:1px solid var(--line)}
+.planner h2{font-size:20px}
+.planner .plan-head p{margin:0;color:var(--muted);font-size:14px;max-width:52ch}
+.plan-target{display:grid;gap:8px;align-content:start}
+.eyebrow-d{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.chip b{font-family:var(--f-num)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.custom-t{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.custom-t input{width:90px;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 8px;font-family:var(--f-num);color:var(--ink)}
+.plan-grid{display:grid}
+.prow{display:grid;grid-template-columns:120px minmax(0,1fr) 76px 92px 128px 34px;gap:8px;align-items:center;padding:6px 12px 6px 18px;border-top:1px solid var(--line)}
+.prow:first-child{border-top:0}
+.prow.head{background:var(--sunk);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding-block:10px}
+.prow input{width:100%;border:1px solid transparent;background:transparent;border-radius:6px;padding:7px 8px;min-width:0}
+.prow input:hover{border-color:var(--line)}
+.prow input:focus{border-color:var(--focus);background:var(--bg);outline:none}
+.prow input.code{font-family:var(--f-num);font-weight:700;text-transform:uppercase}
+.prow input.cr,.prow input.ex{font-family:var(--f-num);text-align:right}
+.prow input.ex{border:1px dashed var(--line)}
+.prow input.missing{background:var(--accent-soft)}
+.r{text-align:right}
+.need{display:flex;justify-content:flex-end;align-items:center;gap:8px;font-family:var(--f-num);font-weight:700;font-size:16px;font-variant-numeric:tabular-nums}
+.need small{font-family:var(--f-body);font-weight:500;font-size:11px;color:var(--muted)}
+.need .grade{width:26px;height:26px;font-size:12px}
+.need.out{color:var(--fail)}
+.need.fixed{color:var(--muted);font-weight:500;font-size:13px}
+.plan-out{padding:14px 18px;border-top:1px solid var(--line);display:flex;gap:14px 28px;flex-wrap:wrap;align-items:center}
+.plan-out .big{font-family:var(--f-num);font-weight:700;font-size:26px;line-height:1.1}
+.plan-out .lbl{font-size:12px;color:var(--muted)}
+.plan-out .msg{flex:1 1 280px;font-size:14px;padding:10px 12px;border-radius:10px;background:var(--sunk)}
+.plan-out .msg.good{background:color-mix(in srgb,var(--first) 14%, var(--surface))}
+.plan-out .msg.bad{background:color-mix(in srgb,var(--fail) 14%, var(--surface))}
+.plan-empty{padding:26px 18px;text-align:center;color:var(--muted)}
+.copy-from{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
+.copy-from select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px;min-height:40px;max-width:220px}
+.card.how{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:28px}
 .target-out{border-radius:10px;background:var(--sunk);padding:12px 14px;font-size:14px}
 .target-out b{font-family:var(--f-num);font-size:22px;display:block}
 .bands{display:grid;gap:6px;font-size:14px}
@@ -188,7 +226,18 @@ details.paste textarea{width:100%;min-height:120px;margin-top:10px;border:1px so
 
 @media (max-width:760px){
   .hero{grid-template-columns:1fr;gap:20px}
-  .lower-grid{grid-template-columns:1fr}
+  .card.how{grid-template-columns:1fr}
+  .prow{grid-template-columns:64px 88px minmax(0,1fr) 34px;padding:10px 8px 10px 12px;gap:4px 8px}
+  .prow.head{display:none}
+  .prow > :nth-child(1){grid-column:1 / 4;grid-row:1}
+  .prow > :nth-child(6){grid-column:4;grid-row:1}
+  .prow > :nth-child(2){grid-column:1 / -1;grid-row:2}
+  .prow > :nth-child(3){grid-column:1;grid-row:3}
+  .prow > :nth-child(4){grid-column:2;grid-row:3}
+  .prow > :nth-child(5){grid-column:3 / -1;grid-row:3}
+  .prow input.cr{border-color:var(--line)}
+  .prow input[data-p="name"]{color:var(--muted);font-size:14px;padding-block:2px}
+  .need:not(.fixed):not(:empty)::before{content:"need";font-family:var(--f-body);font-weight:500;font-size:12px;color:var(--muted);margin-right:auto;padding-left:4px}
   .review-row{grid-template-columns:24px 92px minmax(0,1fr) 58px}
   .seg{font-size:0}
 }
@@ -263,38 +312,44 @@ details.paste textarea{width:100%;min-height:120px;margin-top:10px;border:1px so
 
     <section class="panel" id="panel"></section>
 
-    <div class="lower-grid">
-      <section class="card">
-        <h2>What do I need next semester?</h2>
-        <p>Pick a target CWA and how many credit hours you will take. This uses every mark you have entered so far.</p>
-        <div class="field-row">
-          <label class="field">Target CWA
-            <select id="tTarget">
-              <option value="70">70 (First Class)</option>
-              <option value="60">60 (Second Upper)</option>
-              <option value="50">50 (Second Lower)</option>
-              <option value="40">40 (Pass)</option>
-            </select>
-          </label>
-          <label class="field">Credit hours next semester
-            <input id="tCredits" type="number" min="1" max="40" value="20" inputmode="numeric">
-          </label>
+    <section class="panel planner" id="planner" aria-labelledby="planTitle">
+      <div class="plan-head">
+        <div style="display:grid;gap:4px;min-width:0">
+          <h2 id="planTitle">Plan next semester</h2>
+          <p>Add the courses you will take and their credit hours. You will see the lowest mark you need in each course to reach your target CWA.</p>
         </div>
-        <div class="target-out" id="tOut"></div>
-      </section>
-      <section class="card">
+        <div class="plan-target">
+          <span class="eyebrow-d">Target CWA</span>
+          <div class="chips" id="pChips" role="group" aria-label="Target CWA"></div>
+          <label class="custom-t">or type one <input id="pTarget" type="number" min="1" max="100" step="0.01" inputmode="decimal" aria-label="Custom target CWA"></label>
+        </div>
+      </div>
+      <div class="plan-grid" id="planRows"></div>
+      <div class="plan-out" id="planOut"></div>
+      <div class="panel-foot">
+        <div class="actions">
+          <button class="btn" type="button" data-act="planAdd">+ Add course</button>
+          <button class="btn" type="button" data-act="planImport">Upload timetable</button>
+          <span class="copy-from" id="copyFrom"></span>
+        </div>
+        <button class="btn ghost danger" type="button" data-act="planClear">Clear plan</button>
+      </div>
+    </section>
+
+    <section class="card how">
+      <div style="display:grid;gap:12px;align-content:start">
         <h2>How the CWA is worked out</h2>
-        <div class="formula">CWA = Σ (mark × credit hours) ÷ Σ credit hours</div>
-        <p>Each course mark is the raw percentage on your results slip. Courses without a mark yet are left out.</p>
-        <div class="bands">
-          <div style="--c:var(--first)"><i></i><span>First Class</span><span>70 – 100</span></div>
-          <div style="--c:var(--upper)"><i></i><span>Second Class Upper</span><span>60 – 69.99</span></div>
-          <div style="--c:var(--lower)"><i></i><span>Second Class Lower</span><span>50 – 59.99</span></div>
-          <div style="--c:var(--pass)"><i></i><span>Pass</span><span>40 – 49.99</span></div>
-          <div style="--c:var(--fail)"><i></i><span>Fail</span><span>below 40</span></div>
-        </div>
-      </section>
-    </div>
+        <div class="formula">CWA = &Sigma; (mark &times; credit hours) &divide; &Sigma; credit hours</div>
+        <p>Each course mark is the raw percentage on your results slip. Courses without a mark yet are left out. The planner adds your next courses to the marks you already have and solves for the mark each one needs.</p>
+      </div>
+      <div class="bands">
+        <div style="--c:var(--first)"><i></i><span>First Class</span><span>70 &ndash; 100</span></div>
+        <div style="--c:var(--upper)"><i></i><span>Second Class Upper</span><span>60 &ndash; 69.99</span></div>
+        <div style="--c:var(--lower)"><i></i><span>Second Class Lower</span><span>50 &ndash; 59.99</span></div>
+        <div style="--c:var(--pass)"><i></i><span>Pass</span><span>40 &ndash; 49.99</span></div>
+        <div style="--c:var(--fail)"><i></i><span>Fail</span><span>below 40</span></div>
+      </div>
+    </section>
   </div>
 </main>
 
@@ -377,13 +432,22 @@ function demoState(){
     {id:uid(), code:"COE 152", name:"Basic Electronics", credits:3, mark:null},
     {id:uid(), code:"CSM 158", name:"Programming with C++", credits:3, mark:null}
   ]};
-  return {v:1, demo:true, active:s2.id, semesters:[s1,s2]};
+  var plan = {target:"keep", courses:[
+    {id:uid(), code:"COE 251", name:"Digital Systems", credits:3, expect:null},
+    {id:uid(), code:"MATH 251", name:"Differential Equations", credits:4, expect:null},
+    {id:uid(), code:"EE 251", name:"Circuit Theory", credits:3, expect:null},
+    {id:uid(), code:"COE 253", name:"Data Structures", credits:3, expect:85},
+    {id:uid(), code:"ENGL 263", name:"Literature in English", credits:2, expect:null}
+  ]};
+  return {v:1, demo:true, active:s2.id, semesters:[s1,s2], plan:plan};
 }
 function load(){
   try{ var raw = localStorage.getItem(KEY); if(raw){ var s = JSON.parse(raw); if(s && Array.isArray(s.semesters)) return s; } }catch(e){}
   return demoState();
 }
 var state = load();
+function ensurePlan(){ if(!state.plan || !Array.isArray(state.plan.courses)) state.plan = {target:"keep", courses:[]}; }
+ensurePlan();
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
 function activeSem(){
   var s = state.semesters.find(function(x){ return x.id===state.active; });
@@ -443,7 +507,7 @@ function renderSummary(){
   $("mCourses").textContent = allCourses().length;
   $("mSems").textContent = state.semesters.length;
   $("demoNotice").hidden = !state.demo;
-  renderTabs(); renderSemStats(); renderTarget();
+  renderTabs(); renderSemStats(); renderPlanOut(); renderCopyFrom();
 }
 function renderTabs(){
   var bar = $("semBar");
@@ -489,18 +553,96 @@ function renderPanel(){
     '<div class="panel-foot"><span style="color:var(--muted);font-size:13px">Saved automatically on this device.</span><button class="btn ghost danger" type="button" data-act="delSem" id="delSemBtn">Delete semester</button></div>';
   renderSemStats();
 }
-function renderTarget(){
-  var all = agg(allCourses());
-  var T = parseFloat($("tTarget").value), c = num($("tCredits").value);
-  var out = $("tOut");
-  if(!c || c<=0){ out.innerHTML = "Enter the credit hours you will take."; return; }
-  if(!all.c){ out.innerHTML = "<b>"+fmt(T)+"</b>average needed. Add some marks to see a more useful answer."; return; }
-  var need = (T*(all.c+c) - all.w)/c;
-  if(need>100) out.innerHTML = "<b>Not reachable this semester</b>You would need "+fmt(need)+" on average. Spread the climb over more semesters.";
-  else if(need<=0) out.innerHTML = "<b>Already safe</b>Even a 0 average in "+c+" credits keeps you at "+fmt(all.w/(all.c+c))+" or above "+T+".";
-  else out.innerHTML = "<b>"+fmt(need)+" average</b>across "+c+" credit hours brings your CWA to "+T+".";
+function ceil2(v){ return Math.ceil(v*100 - 1e-7)/100; }
+function planTarget(cur){
+  var t = state.plan.target;
+  if(t==="keep") return cur==null ? 70 : cur;
+  var n = num(t); return (n!=null && n>0 && n<=100) ? n : 70;
 }
-function renderAll(){ renderPanel(); renderSummary(); }
+function renderChips(){
+  var cur = agg(allCourses()).avg, t = state.plan.target;
+  var opts = [];
+  if(cur!=null) opts.push({v:"keep", label:"Keep my CWA", n:fmt(cur)});
+  [[70,"First Class"],[60,"2nd Upper"],[50,"2nd Lower"],[40,"Pass"]].forEach(function(o){ opts.push({v:String(o[0]), label:o[1], n:o[0]}); });
+  if(t==="keep" && cur==null) t = "70";
+  $("pChips").innerHTML = opts.map(function(o){ return '<button type="button" class="chip" data-target="'+o.v+'" aria-pressed="'+(String(t)===o.v)+'">'+o.label+' <b>'+o.n+'</b></button>'; }).join("");
+  var custom = $("pTarget"); var isPreset = opts.some(function(o){ return String(t)===o.v; });
+  if(document.activeElement!==custom) custom.value = isPreset ? "" : t;
+}
+function renderCopyFrom(){
+  var srcs = state.semesters.filter(function(s){ return s.courses.some(function(c){ return !isMark(c.mark); }); });
+  var el = $("copyFrom");
+  if(!srcs.length){ el.innerHTML = ""; return; }
+  el.innerHTML = '<select id="copySel" aria-label="Semester to copy from">'+srcs.map(function(s){
+    var n = s.courses.filter(function(c){ return !isMark(c.mark); }).length;
+    return '<option value="'+s.id+'">'+esc(s.name)+' ('+n+' unmarked)</option>'; }).join("")+'</select><button class="btn" type="button" data-act="planCopy">Use these courses</button>';
+}
+function renderPlan(){
+  var P = state.plan.courses;
+  renderChips(); renderCopyFrom();
+  if(!P.length){
+    $("planRows").innerHTML = '<div class="plan-empty">No courses planned yet. Add them one by one, upload your timetable, or use courses from a semester that has no marks yet.</div>';
+  } else {
+    $("planRows").innerHTML = '<div class="prow head"><span>Code</span><span>Course</span><span class="r">Credits</span><span class="r" title="Optional: a mark you expect in this course">I expect</span><span class="r">Need at least</span><span></span></div>' +
+      P.map(function(c){
+        return '<div class="prow" data-prow="'+c.id+'">'+
+          '<input class="code" data-p="code" data-pid="'+c.id+'" value="'+esc(c.code)+'" placeholder="COE 251" aria-label="Course code" autocomplete="off">'+
+          '<input data-p="name" data-pid="'+c.id+'" value="'+esc(c.name)+'" placeholder="Course name" aria-label="Course name" autocomplete="off">'+
+          '<input class="cr'+(isCred(c.credits)?'':' missing')+'" data-p="credits" data-pid="'+c.id+'" value="'+(c.credits==null?"":c.credits)+'" placeholder="credits" type="number" min="0" max="12" inputmode="numeric" aria-label="Credit hours">'+
+          '<input class="ex" data-p="expect" data-pid="'+c.id+'" value="'+(c.expect==null?"":c.expect)+'" placeholder="expect?" type="number" min="0" max="100" step="0.01" inputmode="decimal" aria-label="Mark you expect (optional)">'+
+          '<div class="need" data-need="'+c.id+'"></div>'+
+          '<button class="del" type="button" data-pdel="'+c.id+'" aria-label="Remove '+esc(c.code||"course")+' from plan">'+ICON_DEL+'</button></div>';
+      }).join("");
+  }
+  renderPlanOut();
+}
+function planCalc(){
+  var all = agg(allCourses());
+  var T = planTarget(all.avg);
+  var P = state.plan.courses.filter(function(c){ return isCred(c.credits); });
+  var fixedW = 0, fixedC = 0, freeC = 0;
+  P.forEach(function(c){ if(isMark(c.expect)){ fixedW += c.expect*c.credits; fixedC += c.credits; } else freeC += c.credits; });
+  var totalC = all.c + fixedC + freeC;
+  var R = freeC ? (T*totalC - all.w - fixedW)/freeC : null;
+  return {all:all, T:T, P:P, fixedW:fixedW, fixedC:fixedC, freeC:freeC, totalC:totalC, R:R};
+}
+function renderPlanOut(){
+  renderChips();
+  var k = planCalc(), out = $("planOut");
+  var need = k.R==null ? null : ceil2(k.R);
+  var shown = need==null ? null : Math.max(need, 40);
+  state.plan.courses.forEach(function(c){
+    var cell = document.querySelector('[data-need="'+c.id+'"]'); if(!cell) return;
+    if(!isCred(c.credits)){ cell.className="need fixed"; cell.textContent = "add credits"; return; }
+    if(isMark(c.expect)){ cell.className="need fixed"; cell.textContent = "your estimate"; return; }
+    if(need>100){ cell.className="need out"; cell.innerHTML = fmt(need)+'<small>over 100</small>'; return; }
+    var g = grade(shown);
+    cell.className="need"; cell.innerHTML = fmt(shown) + '<span class="grade" style="--c:'+g.c+'">'+g.g+'</span>';
+  });
+  if(!state.plan.courses.length){ out.innerHTML = ""; out.hidden = true; return; }
+  out.hidden = false;
+  if(!k.P.length){ out.innerHTML = '<div class="msg">Enter the credit hours for each course to see the marks you need.</div>'; return; }
+  var tgt = '<div><div class="lbl">Target CWA</div><div class="big">'+fmt(k.T)+'</div></div>';
+  var curr = '<div><div class="lbl">CWA now</div><div class="big">'+(k.all.avg==null?"--":fmt(k.all.avg))+'</div></div>';
+  if(k.R==null){
+    var proj = (k.all.w + k.fixedW)/k.totalC;
+    out.innerHTML = curr + tgt + '<div class="msg '+(proj>=k.T?"good":"bad")+'">With the marks you expect, your CWA would be <b class="num">'+fmt(proj)+'</b>'+(proj>=k.T?", which reaches your target.":", which is short of your target. Clear an estimate to see what you need.")+'</div>';
+    return;
+  }
+  var msg, cls = "";
+  if(need>100){
+    var best = (k.all.w + k.fixedW + 100*k.freeC)/k.totalC;
+    cls = "bad"; msg = "This target is out of reach this semester. Even 100 in every course would take you to <b class=\"num\">"+fmt(best)+"</b>. Try a lower target or plan over more semesters.";
+  } else if(need<=40){
+    var atPass = (k.all.w + k.fixedW + 40*k.freeC)/k.totalC;
+    cls = "good"; msg = "You only need to pass. Scoring 40 in each course still leaves you on <b class=\"num\">"+fmt(atPass)+"</b>"+(need<40?", above your target.":".");
+  } else {
+    var fixedNote = k.fixedC ? " in the courses without an estimate" : " in every course";
+    msg = "Score at least <b class=\"num\">"+fmt(need)+"</b>"+fixedNote+" ("+k.freeC+" credit hours) to finish next semester on a CWA of <b class=\"num\">"+fmt(k.T)+"</b>. A higher mark in one course lowers what you need in the others. Type a mark under “I expect” to see this.";
+  }
+  out.innerHTML = curr + tgt + '<div class="msg '+cls+'">'+msg+'</div>';
+}
+function renderAll(){ renderPanel(); renderPlan(); renderSummary(); }
 
 /* ---------- toast ---------- */
 var toastTimer, undoFn;
@@ -528,6 +670,13 @@ function addCourse(){
 }
 document.addEventListener("click", function(e){
   var t = e.target.closest("button"); if(!t) return;
+  if(t.dataset.target){ state.plan.target = t.dataset.target; leaveDemo(); save(); renderPlanOut(); return; }
+  if(t.dataset.pdel){
+    var P = state.plan.courses, j = P.findIndex(function(c){ return c.id===t.dataset.pdel; }); if(j<0) return;
+    var rm = P.splice(j,1)[0]; leaveDemo(); save(); renderPlan();
+    toast("Removed " + (rm.code||"course") + " from the plan", function(){ P.splice(j,0,rm); save(); renderPlan(); });
+    return;
+  }
   if(t.dataset.sem){ state.active = t.dataset.sem; save(); renderAll(); return; }
   if(t.id==="addSem"){ newSemester(); return; }
   if(t.dataset.del){
@@ -537,6 +686,24 @@ document.addEventListener("click", function(e){
     return;
   }
   var act = t.dataset.act;
+  if(act==="planAdd"){
+    leaveDemo(); var pc = {id:uid(), code:"", name:"", credits:null, expect:null}; state.plan.courses.push(pc); save(); renderPlan();
+    var pe = document.querySelector('[data-pid="'+pc.id+'"][data-p="code"]'); if(pe) pe.focus(); return;
+  }
+  if(act==="planImport"){ openImport("__plan"); return; }
+  if(act==="planCopy"){
+    var src = state.semesters.find(function(x){ return x.id===$("copySel").value; }); if(!src) return;
+    var have = {}; state.plan.courses.forEach(function(c){ have[c.code.replace(/\s/g,"")] = 1; });
+    var added = 0;
+    src.courses.forEach(function(c){ if(!isMark(c.mark) && !have[c.code.replace(/\s/g,"")]){ state.plan.courses.push({id:uid(), code:c.code, name:c.name, credits:c.credits, expect:null}); added++; } });
+    leaveDemo(); save(); renderPlan(); toast(added ? "Added "+added+" course"+(added===1?"":"s")+" from "+src.name : "Those courses are already in your plan"); return;
+  }
+  if(act==="planClear"){
+    if(t.dataset.armed!=="1"){ t.dataset.armed="1"; t.textContent="Tap again to clear"; setTimeout(function(){ if(t.isConnected){ t.dataset.armed=""; t.textContent="Clear plan"; } },3500); return; }
+    t.dataset.armed=""; t.textContent="Clear plan";
+    var old = state.plan.courses; state.plan.courses = []; leaveDemo(); save(); renderPlan();
+    toast("Cleared the plan", function(){ state.plan.courses = old; save(); renderPlan(); }); return;
+  }
   if(act==="add") addCourse();
   else if(act==="import") openImport();
   else if(act==="newSem") newSemester();
@@ -551,7 +718,16 @@ document.addEventListener("click", function(e){
 document.addEventListener("input", function(e){
   var el = e.target;
   if(el.id==="semName"){ var s = activeSem(); s.name = el.value; leaveDemo(); save(); renderTabs(); return; }
-  if(el.id==="tTarget"||el.id==="tCredits"){ renderTarget(); return; }
+  if(el.id==="pTarget"){ var tv = num(el.value); if(tv!=null && tv>0 && tv<=100){ state.plan.target = String(tv); } else if(el.value===""){ state.plan.target = "keep"; } leaveDemo(); save(); renderPlanOut(); return; }
+  if(el.dataset.pid){
+    var pc = state.plan.courses.find(function(x){ return x.id===el.dataset.pid; }); if(!pc) return;
+    var pf = el.dataset.p; leaveDemo();
+    if(pf==="code") pc.code = el.value.toUpperCase();
+    else if(pf==="name") pc.name = el.value;
+    else if(pf==="credits"){ pc.credits = num(el.value); el.classList.toggle("missing", !isCred(pc.credits)); }
+    else if(pf==="expect"){ var ev = num(el.value); pc.expect = isMark(ev) ? ev : null; }
+    save(); renderPlanOut(); return;
+  }
   var id = el.dataset.id, f = el.dataset.f; if(!id||!f) return;
   var c = activeSem().courses.find(function(x){ return x.id===id; }); if(!c) return;
   leaveDemo();
@@ -571,17 +747,18 @@ document.addEventListener("keydown", function(e){
   if(e.key==="Escape" && !$("importOverlay").hidden) closeImport();
 });
 $("clearDemo").addEventListener("click", function(){
-  state = {v:1, demo:false, active:null, semesters:[]}; newSemester();
+  state = {v:1, demo:false, active:null, semesters:[], plan:{target:"keep", courses:[]}}; newSemester(); renderPlan();
   toast("Ready for your courses. Upload your timetable to start.");
 });
 
 /* ================= Import / detection ================= */
 var detected = [];
-function openImport(){
+function openImport(pre){
   $("importOverlay").hidden = false; resetImport();
   var sel = $("impTarget"); var a = activeSem();
-  sel.innerHTML = state.semesters.map(function(s){ return '<option value="'+s.id+'"'+(a&&s.id===a.id?" selected":"")+'>'+esc(s.name)+'</option>'; }).join("") + '<option value="__new">A new semester</option>';
+  sel.innerHTML = state.semesters.map(function(s){ return '<option value="'+s.id+'"'+(a&&s.id===a.id?" selected":"")+'>'+esc(s.name)+'</option>'; }).join("") + '<option value="__new">A new semester</option><option value="__plan">Next semester plan</option>';
   if(!state.semesters.length) sel.value = "__new";
+  if(pre==="__plan") sel.value = "__plan";
 }
 function closeImport(){ $("importOverlay").hidden = true; }
 function resetImport(){
@@ -592,7 +769,7 @@ function status(msg, kind){
   var s = $("impStatus"); s.hidden = false; s.className = "status" + (kind==="err"?" err":"");
   s.innerHTML = (kind==="busy"?'<span class="spin"></span>':"") + "<span>"+msg+"</span>";
 }
-$("openImport").addEventListener("click", openImport);
+$("openImport").addEventListener("click", function(){ openImport(); });
 $("closeImport").addEventListener("click", closeImport);
 $("importOverlay").addEventListener("click", function(e){ if(e.target.id==="importOverlay") closeImport(); });
 $("impAgain").addEventListener("click", resetImport);
@@ -827,8 +1004,14 @@ $("reviewRows").addEventListener("input", function(e){
 $("impSave").addEventListener("click", function(){
   var picked = detected.filter(function(c){ return c.keep && c.code.trim(); });
   if(!picked.length){ status("Tick at least one course to add.", "err"); return; }
-  if(state.demo){ state = {v:1, demo:false, active:null, semesters:[]}; }
   var target = $("impTarget").value;
+  if(target==="__plan"){
+    if(state.demo){ state = {v:1, demo:false, active:null, semesters:[], plan:{target:"keep", courses:[]}}; }
+    picked.forEach(function(c){ state.plan.courses.push({id:uid(), code:c.code.trim(), name:c.name.trim(), credits:isCred(c.credits)?c.credits:null, expect:null}); });
+    save(); renderAll(); closeImport(); $("planner").scrollIntoView({behavior:"smooth", block:"start"});
+    toast("Added " + picked.length + " course" + (picked.length===1?"":"s") + " to your plan."); return;
+  }
+  if(state.demo){ state = {v:1, demo:false, active:null, semesters:[], plan:{target:"keep", courses:[]}}; }
   var sem = state.semesters.find(function(s){ return s.id===target; });
   if(!sem){ sem = newSemester(); }
   picked.forEach(function(c){ sem.courses.push({id:uid(), code:c.code.trim(), name:c.name.trim(), credits:isCred(c.credits)?c.credits:null, mark:null}); });
@@ -837,7 +1020,7 @@ $("impSave").addEventListener("click", function(){
 });
 
 /* expose the parser for testing */
-window.__cwa = {parseCourses: parseCourses, agg: agg};
+window.__cwa = {parseCourses: parseCourses, agg: agg, planCalc: planCalc};
 renderAll();
 })();
 </script>
