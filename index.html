@@ -1,0 +1,844 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
+<title>KNUST CWA Calculator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Work out your KNUST Cumulative Weighted Average and class from your courses and marks.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a results sheet. A dark "transcript" band holds the CWA and the class scale; below it, semester tabs and an editable course table. */
+:root{
+  --bg:#f3f5f1; --surface:#ffffff; --sunk:#e8ece5; --line:#d5dbd1;
+  --ink:#16201b; --muted:#5d6a62;
+  --band:#123b30; --band-ink:#eef4ef; --band-muted:#a9c2b6;
+  --accent:#c98a12; --accent-ink:#1d1405; --accent-soft:#f6e7c6;
+  --first:#1f8a5b; --upper:#3f7fbf; --lower:#8a6fc4; --pass:#c27a2c; --fail:#c2453b;
+  --focus:#c98a12;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Figtree", "Segoe UI", system-ui, sans-serif;
+  --f-num:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1512; --surface:#151f1b; --sunk:#1b2722; --line:#2a3a33;
+  --ink:#e6eee9; --muted:#97a79f;
+  --band:#0b2a22; --band-ink:#eef4ef; --band-muted:#8fb0a2;
+  --accent:#e2a634; --accent-ink:#1d1405; --accent-soft:#3a2d12;
+  --first:#3fbf86; --upper:#6aa6e0; --lower:#a993e0; --pass:#e09a4f; --fail:#e7695f;
+  --focus:#e2a634; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0e1512; --surface:#151f1b; --sunk:#1b2722; --line:#2a3a33;
+  --ink:#e6eee9; --muted:#97a79f;
+  --band:#0b2a22; --band-ink:#eef4ef; --band-muted:#8fb0a2;
+  --accent:#e2a634; --accent-ink:#1d1405; --accent-soft:#3a2d12;
+  --first:#3fbf86; --upper:#6aa6e0; --lower:#a993e0; --pass:#e09a4f; --fail:#e7695f;
+  --focus:#e2a634; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+
+/* Header band */
+.band{background:var(--band);color:var(--band-ink)}
+.band .wrap{padding-block:22px 28px;display:grid;gap:22px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand h1{font-size:20px;font-weight:800;letter-spacing:-.01em}
+.brand span{color:var(--band-muted);font-size:13px}
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr);gap:28px;align-items:end}
+.eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--band-muted);font-weight:600}
+.cwa-big{font-family:var(--f-display);font-weight:800;font-size:clamp(64px,13vw,112px);line-height:.9;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.cwa-big.empty{color:var(--band-muted)}
+.class-pill{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:6px 12px;border-radius:999px;font-weight:700;font-size:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)}
+.class-pill i{width:10px;height:10px;border-radius:50%;background:var(--c, var(--band-muted))}
+.meta-row{display:flex;gap:22px;flex-wrap:wrap;margin-top:14px;color:var(--band-muted);font-size:13px}
+.meta-row b{color:var(--band-ink);font-family:var(--f-num);font-weight:700;font-size:15px;display:block}
+
+/* Class scale */
+.scale{display:grid;gap:8px}
+.scale-track{position:relative;height:44px;border-radius:8px;overflow:visible;display:grid;grid-template-columns:40fr 10fr 10fr 10fr 30fr}
+.seg{position:relative;display:flex;align-items:flex-end;padding:0 6px 5px;font-size:11px;font-weight:600;color:rgba(255,255,255,.85);overflow:hidden;white-space:nowrap}
+.seg:first-child{border-radius:8px 0 0 8px}.seg:last-child{border-radius:0 8px 8px 0}
+.seg.f{background:color-mix(in srgb,var(--fail) 38%, transparent)}
+.seg.p{background:color-mix(in srgb,var(--pass) 55%, transparent)}
+.seg.l{background:color-mix(in srgb,var(--lower) 60%, transparent)}
+.seg.u{background:color-mix(in srgb,var(--upper) 62%, transparent)}
+.seg.x{background:color-mix(in srgb,var(--first) 66%, transparent)}
+.marker{position:absolute;top:-8px;bottom:-8px;width:3px;background:var(--accent);border-radius:2px;left:0;transition:left .5s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 0 3px var(--band)}
+.marker::after{content:attr(data-v);position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-family:var(--f-num);font-size:12px;font-weight:700;background:var(--accent);color:var(--accent-ink);padding:1px 6px;border-radius:4px;white-space:nowrap}
+.marker[hidden]{display:none}
+.ticks{position:relative;height:16px;font-family:var(--f-num);font-size:11px;color:var(--band-muted)}
+.ticks span{position:absolute;transform:translateX(-50%)}
+.next-step{font-size:13px;color:var(--band-muted)}
+.next-step b{color:var(--band-ink)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);padding:9px 14px;font-weight:600;cursor:pointer;min-height:40px;transition:background .15s,border-color .15s,transform .05s}
+.btn:hover{border-color:var(--muted)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--ink);background:var(--sunk)}
+.btn.on-band{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:var(--band-ink)}
+.btn.on-band:hover{background:rgba(255,255,255,.14)}
+.btn.danger{color:var(--fail)}
+.btn svg{width:18px;height:18px;flex:none}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+
+main .wrap{padding-block:24px 48px;display:grid;gap:22px}
+.notice{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 40%, transparent);border-radius:var(--r);padding:12px 14px;font-size:14px}
+
+/* Semester tabs */
+.sem-bar{display:flex;gap:8px;align-items:center;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.tab{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;cursor:pointer;font-weight:600;font-size:14px;display:flex;gap:8px;align-items:center;white-space:nowrap}
+.tab small{font-family:var(--f-num);color:var(--muted);font-weight:500}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab[aria-selected="true"] small{color:color-mix(in srgb,var(--bg) 70%, transparent)}
+.tab.add{border-style:dashed;color:var(--muted)}
+
+/* Semester panel */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px;border-bottom:1px solid var(--line)}
+.sem-name{font-family:var(--f-display);font-weight:700;font-size:20px;border:1px solid transparent;background:transparent;border-radius:6px;padding:2px 6px;margin-left:-6px;min-width:0;width:min(340px,100%)}
+.sem-name:hover{border-color:var(--line)}
+.sem-stats{display:flex;gap:18px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.sem-stats b{font-family:var(--f-num);color:var(--ink);font-size:16px;display:block}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:10px 8px;background:var(--sunk)}
+th:first-child,td:first-child{padding-left:18px}
+th:last-child,td:last-child{padding-right:12px}
+td{padding:6px 8px;border-top:1px solid var(--line);vertical-align:middle}
+td input{width:100%;border:1px solid transparent;background:transparent;border-radius:6px;padding:7px 8px}
+td input:hover{border-color:var(--line)}
+td input:focus{border-color:var(--focus);background:var(--bg);outline:none}
+td input.code{font-family:var(--f-num);font-weight:700;text-transform:uppercase;width:110px}
+td input.cr,td input.mk{font-family:var(--f-num);text-align:right;width:76px}
+td input.mk{font-weight:700}
+td input.missing{background:var(--accent-soft)}
+td input.bad{border-color:var(--fail)}
+.grade{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:7px;font-family:var(--f-num);font-weight:700;font-size:14px;color:#fff;background:var(--c,var(--line))}
+.grade.none{background:transparent;color:var(--muted);border:1px dashed var(--line)}
+.col-w{width:96px}
+.del{border:0;background:transparent;color:var(--muted);cursor:pointer;width:34px;height:34px;border-radius:6px;display:grid;place-items:center}
+.del:hover{color:var(--fail);background:var(--sunk)}
+.del svg{width:16px;height:16px}
+.empty-state{padding:34px 18px;text-align:center;color:var(--muted);display:grid;gap:14px;justify-items:center}
+.empty-state h3{color:var(--ink);font-size:18px}
+.panel-foot{display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line);background:var(--sunk);justify-content:space-between;align-items:center}
+
+/* Lower grid */
+.lower-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:12px;align-content:start}
+.card h2{font-size:17px}
+.card p{margin:0;color:var(--muted);font-size:14px}
+.field-row{display:flex;gap:12px;flex-wrap:wrap}
+.field{display:grid;gap:4px;font-size:13px;color:var(--muted);flex:1 1 140px}
+.field input,.field select{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 10px;color:var(--ink);font-family:var(--f-num)}
+.target-out{border-radius:10px;background:var(--sunk);padding:12px 14px;font-size:14px}
+.target-out b{font-family:var(--f-num);font-size:22px;display:block}
+.bands{display:grid;gap:6px;font-size:14px}
+.bands div{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center}
+.bands i{width:12px;height:12px;border-radius:3px;background:var(--c)}
+.bands span:last-child{font-family:var(--f-num);color:var(--muted)}
+.formula{font-family:var(--f-num);font-size:13px;background:var(--sunk);padding:10px 12px;border-radius:8px;overflow-x:auto;white-space:nowrap}
+
+footer{color:var(--muted);font-size:13px}
+footer .wrap{padding-block:0 32px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* Import sheet */
+.overlay{position:fixed;inset:0;background:rgba(5,12,9,.55);z-index:50;display:grid;place-items:center;padding:max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
+.sheet{background:var(--surface);color:var(--ink);border-radius:16px;width:min(720px,100%);max-height:100%;overflow:auto;display:grid;gap:16px;padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.sheet-head{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.sheet-head h2{font-size:22px}
+.sheet-head p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;display:grid;gap:8px;justify-items:center;cursor:pointer;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop svg{width:34px;height:34px;color:var(--accent)}
+.drop strong{font-size:16px}
+.drop small{color:var(--muted)}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.or::before,.or::after{content:"";height:1px;background:var(--line);flex:1}
+details.paste summary{cursor:pointer;font-weight:600}
+details.paste textarea{width:100%;min-height:120px;margin-top:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:10px;font-family:var(--f-num);font-size:13px}
+.status{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:10px;background:var(--sunk);font-size:14px}
+.status.err{background:color-mix(in srgb,var(--fail) 14%, var(--surface));}
+.spin{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.review{display:grid;gap:8px}
+.review-row{display:grid;grid-template-columns:24px 110px minmax(0,1fr) 70px;gap:8px;align-items:center}
+.review-row input[type=text],.review-row input[type=number]{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:7px 8px;min-width:0;width:100%}
+.review-row .code{font-family:var(--f-num);font-weight:700;text-transform:uppercase}
+.review-row .cr{font-family:var(--f-num);text-align:right}
+.review-row .cr.missing{background:var(--accent-soft)}
+.review-head{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sheet-foot{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+.sheet-foot .field{flex:1 1 200px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 12px 10px 16px;border-radius:10px;display:flex;gap:12px;align-items:center;z-index:60;font-size:14px;max-width:calc(100% - 32px)}
+.toast button{background:transparent;border:0;color:var(--accent);font-weight:700;cursor:pointer;padding:4px 6px}
+
+@media (max-width:760px){
+  .hero{grid-template-columns:1fr;gap:20px}
+  .lower-grid{grid-template-columns:1fr}
+  .review-row{grid-template-columns:24px 92px minmax(0,1fr) 58px}
+  .seg{font-size:0}
+}
+@media (max-width:520px){
+  .review-head{display:none}
+  .review-row{grid-template-columns:24px minmax(0,1fr) 64px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .review-row>:nth-child(3){grid-column:2 / -1;grid-row:2}
+}
+@media (max-width:640px){
+  table{min-width:0}
+  thead{display:none}
+  tbody,tbody tr,tbody td{display:block}
+  tbody tr{display:grid;grid-template-columns:minmax(0,1fr) 64px 72px 34px 34px;gap:4px 6px;align-items:center;padding:10px 12px 10px 14px;border-top:1px solid var(--line)}
+  tbody td{border:0;padding:0!important}
+  tbody td:nth-child(1){grid-column:1;grid-row:1}
+  tbody td:nth-child(2){grid-column:1 / -1;grid-row:2}
+  tbody td:nth-child(3){grid-column:2;grid-row:1}
+  tbody td:nth-child(4){grid-column:3;grid-row:1}
+  tbody td:nth-child(5){grid-column:4;grid-row:1}
+  tbody td:nth-child(6){grid-column:5;grid-row:1}
+  td input.code{width:100%}
+  td input.cr,td input.mk{width:100%;border-color:var(--line)}
+  td input.cr::placeholder{color:var(--muted)}
+  td input[data-f="name"]{color:var(--muted);font-size:14px;padding-block:4px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="band">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand"><h1>CWA Calculator</h1><span>for KNUST students</span></div>
+      <div class="actions">
+        <button class="btn on-band" id="openImport" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M20 15v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4"/></svg>
+          Upload timetable or slip
+        </button>
+      </div>
+    </div>
+    <div class="hero">
+      <div>
+        <div class="eyebrow">Cumulative Weighted Average</div>
+        <div class="cwa-big" id="cwaBig">--</div>
+        <div class="class-pill" id="classPill"><i></i><span>Enter marks to see your class</span></div>
+        <div class="meta-row">
+          <div><b id="mCredits">0</b>credits graded</div>
+          <div><b id="mCourses">0</b>courses</div>
+          <div><b id="mSems">0</b>semesters</div>
+        </div>
+      </div>
+      <div class="scale" aria-label="Class scale">
+        <div class="eyebrow">Where you sit</div>
+        <div class="scale-track">
+          <div class="seg f">Fail</div><div class="seg p">Pass</div><div class="seg l">2nd Lower</div><div class="seg u">2nd Upper</div><div class="seg x">First Class</div>
+          <div class="marker" id="marker" hidden></div>
+        </div>
+        <div class="ticks"><span style="left:0%;transform:none">0</span><span style="left:40%">40</span><span style="left:50%">50</span><span style="left:60%">60</span><span style="left:70%">70</span><span style="left:100%;transform:translateX(-100%)">100</span></div>
+        <div class="next-step" id="nextStep">Your CWA will appear here once a course has a mark.</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="notice" id="demoNotice" hidden>
+      <span>These are example courses so you can see how it works. Your own courses are saved on this device.</span>
+      <button class="btn" id="clearDemo" type="button">Start with my own courses</button>
+    </div>
+
+    <nav class="sem-bar" id="semBar" role="tablist" aria-label="Semesters"></nav>
+
+    <section class="panel" id="panel"></section>
+
+    <div class="lower-grid">
+      <section class="card">
+        <h2>What do I need next semester?</h2>
+        <p>Pick a target CWA and how many credit hours you will take. This uses every mark you have entered so far.</p>
+        <div class="field-row">
+          <label class="field">Target CWA
+            <select id="tTarget">
+              <option value="70">70 (First Class)</option>
+              <option value="60">60 (Second Upper)</option>
+              <option value="50">50 (Second Lower)</option>
+              <option value="40">40 (Pass)</option>
+            </select>
+          </label>
+          <label class="field">Credit hours next semester
+            <input id="tCredits" type="number" min="1" max="40" value="20" inputmode="numeric">
+          </label>
+        </div>
+        <div class="target-out" id="tOut"></div>
+      </section>
+      <section class="card">
+        <h2>How the CWA is worked out</h2>
+        <div class="formula">CWA = Σ (mark × credit hours) ÷ Σ credit hours</div>
+        <p>Each course mark is the raw percentage on your results slip. Courses without a mark yet are left out.</p>
+        <div class="bands">
+          <div style="--c:var(--first)"><i></i><span>First Class</span><span>70 – 100</span></div>
+          <div style="--c:var(--upper)"><i></i><span>Second Class Upper</span><span>60 – 69.99</span></div>
+          <div style="--c:var(--lower)"><i></i><span>Second Class Lower</span><span>50 – 59.99</span></div>
+          <div style="--c:var(--pass)"><i></i><span>Pass</span><span>40 – 49.99</span></div>
+          <div style="--c:var(--fail)"><i></i><span>Fail</span><span>below 40</span></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer><div class="wrap">
+  <span>Your courses and marks stay in this browser. Nothing is sent to a server.</span>
+  <span>Unofficial student tool. Check your official results on the student portal.</span>
+</div></footer>
+
+<!-- Import sheet -->
+<div class="overlay" id="importOverlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="impTitle">
+    <div class="sheet-head">
+      <div>
+        <h2 id="impTitle">Add courses from your timetable</h2>
+        <p>Upload a photo or screenshot of your timetable or course registration slip, or the slip PDF. You can check everything before it is saved.</p>
+      </div>
+      <button class="del" id="closeImport" type="button" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+
+    <div id="impPick">
+      <div style="display:grid;gap:14px">
+        <label class="drop" id="drop" for="fileInput">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
+          <strong>Choose a file or drop it here</strong>
+          <small>JPG, PNG or PDF. A clear, straight photo works best.</small>
+        </label>
+        <input type="file" id="fileInput" accept="image/*,application/pdf" hidden>
+        <div class="or">or</div>
+        <details class="paste">
+          <summary>Paste the text of your registration slip</summary>
+          <textarea id="pasteBox" placeholder="COE 351  Signals and Systems  3&#10;MATH 351  Numerical Analysis  3&#10;..."></textarea>
+          <div style="margin-top:8px"><button class="btn" id="parsePaste" type="button">Find courses in this text</button></div>
+        </details>
+      </div>
+    </div>
+
+    <div class="status" id="impStatus" hidden></div>
+
+    <div id="impReview" hidden>
+      <div class="review">
+        <div class="review-row review-head"><span></span><span>Code</span><span>Course name</span><span style="text-align:right">Credits</span></div>
+        <div id="reviewRows" class="review"></div>
+      </div>
+    </div>
+
+    <div class="sheet-foot" id="impFoot" hidden>
+      <label class="field">Add to
+        <select id="impTarget"></select>
+      </label>
+      <div class="actions">
+        <button class="btn ghost" id="impAgain" type="button">Try another file</button>
+        <button class="btn primary" id="impSave" type="button">Add courses</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden><span id="toastMsg"></span><button id="toastUndo" type="button">Undo</button></div>
+
+<script>
+(function(){
+"use strict";
+var KEY = "knust-cwa-v1";
+var $ = function(id){ return document.getElementById(id); };
+var uid = function(){ return Math.random().toString(36).slice(2,10); };
+var ICON_DEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>';
+
+function demoState(){
+  var s1 = {id:uid(), name:"Year 1, Semester 1", courses:[
+    {id:uid(), code:"MATH 151", name:"Algebra", credits:4, mark:78},
+    {id:uid(), code:"ENGL 157", name:"Communication Skills I", credits:2, mark:64},
+    {id:uid(), code:"COE 151", name:"Introduction to Computer Engineering", credits:3, mark:71},
+    {id:uid(), code:"EE 151", name:"Applied Electricity", credits:3, mark:58},
+    {id:uid(), code:"ME 159", name:"Technical Drawing", credits:3, mark:66},
+    {id:uid(), code:"PHY 153", name:"Physics I", credits:3, mark:69}
+  ]};
+  var s2 = {id:uid(), name:"Year 1, Semester 2", courses:[
+    {id:uid(), code:"MATH 152", name:"Calculus I", credits:4, mark:72},
+    {id:uid(), code:"ENGL 158", name:"Communication Skills II", credits:2, mark:70},
+    {id:uid(), code:"COE 152", name:"Basic Electronics", credits:3, mark:null},
+    {id:uid(), code:"CSM 158", name:"Programming with C++", credits:3, mark:null}
+  ]};
+  return {v:1, demo:true, active:s2.id, semesters:[s1,s2]};
+}
+function load(){
+  try{ var raw = localStorage.getItem(KEY); if(raw){ var s = JSON.parse(raw); if(s && Array.isArray(s.semesters)) return s; } }catch(e){}
+  return demoState();
+}
+var state = load();
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function activeSem(){
+  var s = state.semesters.find(function(x){ return x.id===state.active; });
+  if(!s){ s = state.semesters[0]; if(s) state.active = s.id; }
+  return s;
+}
+
+/* ---------- maths ---------- */
+function isMark(m){ return typeof m==="number" && isFinite(m) && m>=0 && m<=100; }
+function isCred(c){ return typeof c==="number" && isFinite(c) && c>0; }
+function agg(courses){
+  var w=0, c=0, n=0;
+  courses.forEach(function(x){ if(isMark(x.mark) && isCred(x.credits)){ w+=x.mark*x.credits; c+=x.credits; n++; } });
+  return {w:w, c:c, n:n, avg: c? w/c : null};
+}
+function allCourses(){ return state.semesters.reduce(function(a,s){ return a.concat(s.courses); },[]); }
+function band(v){
+  if(v==null) return null;
+  if(v>=70) return {name:"First Class", c:"var(--first)"};
+  if(v>=60) return {name:"Second Class Upper", c:"var(--upper)"};
+  if(v>=50) return {name:"Second Class Lower", c:"var(--lower)"};
+  if(v>=40) return {name:"Pass", c:"var(--pass)"};
+  return {name:"Fail", c:"var(--fail)"};
+}
+function grade(m){
+  if(!isMark(m)) return null;
+  if(m>=70) return {g:"A", c:"var(--first)"};
+  if(m>=60) return {g:"B", c:"var(--upper)"};
+  if(m>=50) return {g:"C", c:"var(--lower)"};
+  if(m>=40) return {g:"D", c:"var(--pass)"};
+  return {g:"F", c:"var(--fail)"};
+}
+var fmt = function(v){ return (Math.round(v*100)/100).toFixed(2); };
+function num(v){ if(v===""||v==null) return null; var n = parseFloat(String(v).replace(",", ".")); return isFinite(n)? n : null; }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+/* ---------- render ---------- */
+function renderSummary(){
+  var all = agg(allCourses());
+  var big = $("cwaBig"), pill = $("classPill"), mk = $("marker");
+  if(all.avg==null){
+    big.textContent = "--"; big.classList.add("empty");
+    pill.style.removeProperty("--c"); pill.querySelector("span").textContent = "Enter marks to see your class";
+    mk.hidden = true;
+    $("nextStep").textContent = "Your CWA will appear here once a course has a mark.";
+  } else {
+    var b = band(all.avg);
+    big.textContent = fmt(all.avg); big.classList.remove("empty");
+    pill.style.setProperty("--c", b.c); pill.querySelector("span").textContent = b.name;
+    mk.hidden = false; mk.style.left = "calc(" + Math.min(100,Math.max(0,all.avg)) + "% - 1.5px)"; mk.setAttribute("data-v", fmt(all.avg));
+    var next = [40,50,60,70].find(function(t){ return all.avg < t; });
+    var ns = $("nextStep");
+    if(next){ ns.innerHTML = "<b>" + fmt(next-all.avg) + "</b> points below the " + esc(band(next).name) + " line at " + next + "."; }
+    else { ns.innerHTML = "<b>" + fmt(all.avg-70) + "</b> points above the First Class line."; }
+  }
+  $("mCredits").textContent = all.c;
+  $("mCourses").textContent = allCourses().length;
+  $("mSems").textContent = state.semesters.length;
+  $("demoNotice").hidden = !state.demo;
+  renderTabs(); renderSemStats(); renderTarget();
+}
+function renderTabs(){
+  var bar = $("semBar");
+  bar.innerHTML = state.semesters.map(function(s){
+    var a = agg(s.courses);
+    return '<button class="tab" role="tab" type="button" data-sem="'+s.id+'" aria-selected="'+(s.id===state.active)+'">'+esc(s.name)+'<small>'+(a.avg==null?"--":fmt(a.avg))+'</small></button>';
+  }).join("") + '<button class="tab add" type="button" id="addSem">+ Semester</button>';
+}
+function renderSemStats(){
+  var s = activeSem(); var el = $("semStats"); if(!s||!el) return;
+  var a = agg(s.courses);
+  var tc = s.courses.reduce(function(t,c){ return t+(isCred(c.credits)?c.credits:0); },0);
+  el.innerHTML = '<div><b>'+(a.avg==null?"--":fmt(a.avg))+'</b>semester average</div><div><b>'+tc+'</b>credit hours</div><div><b>'+a.n+'/'+s.courses.length+'</b>marked</div>';
+  s.courses.forEach(function(c){
+    var cell = document.querySelector('[data-grade="'+c.id+'"]'); if(!cell) return;
+    var g = grade(c.mark);
+    cell.innerHTML = g ? '<span class="grade" style="--c:'+g.c+'">'+g.g+'</span>' : '<span class="grade none">-</span>';
+  });
+}
+function renderPanel(){
+  var s = activeSem(); var p = $("panel");
+  if(!s){
+    p.innerHTML = '<div class="empty-state"><h3>No semesters yet</h3><p>Add a semester, then upload your timetable or type your courses in.</p><button class="btn primary" type="button" data-act="newSem">Add a semester</button></div>';
+    return;
+  }
+  var rows = s.courses.map(function(c){
+    return '<tr data-row="'+c.id+'">'+
+      '<td><input class="code" data-f="code" data-id="'+c.id+'" value="'+esc(c.code)+'" placeholder="COE 351" aria-label="Course code" autocomplete="off"></td>'+
+      '<td><input data-f="name" data-id="'+c.id+'" value="'+esc(c.name)+'" placeholder="Course name" aria-label="Course name" autocomplete="off"></td>'+
+      '<td><input class="cr'+(isCred(c.credits)?'':' missing')+'" data-f="credits" data-id="'+c.id+'" value="'+(c.credits==null?"":c.credits)+'" placeholder="cr" type="number" min="0" max="12" step="1" inputmode="numeric" aria-label="Credit hours"></td>'+
+      '<td><input class="mk" data-f="mark" data-id="'+c.id+'" value="'+(c.mark==null?"":c.mark)+'" type="number" min="0" max="100" step="0.01" inputmode="decimal" placeholder="--" aria-label="Mark out of 100"></td>'+
+      '<td data-grade="'+c.id+'"></td>'+
+      '<td><button class="del" type="button" data-del="'+c.id+'" aria-label="Remove '+esc(c.code||"course")+'">'+ICON_DEL+'</button></td></tr>';
+  }).join("");
+  p.innerHTML =
+    '<div class="panel-head"><div style="display:grid;gap:6px;min-width:0;flex:1 1 260px">'+
+      '<input class="sem-name" id="semName" value="'+esc(s.name)+'" aria-label="Semester name">'+
+      '<div class="sem-stats" id="semStats"></div></div>'+
+      '<div class="actions"><button class="btn" type="button" data-act="import">Upload timetable</button><button class="btn" type="button" data-act="add">+ Add course</button></div></div>'+
+    (s.courses.length ?
+      '<div class="table-scroll"><table><thead><tr><th style="width:130px">Code</th><th>Course</th><th class="col-w" style="text-align:right">Credits</th><th class="col-w" style="text-align:right">Mark</th><th style="width:56px">Grade</th><th style="width:48px"></th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+      : '<div class="empty-state"><h3>No courses in this semester</h3><p>Upload your timetable or course registration slip and we will pick out the courses, or add them one by one.</p><div class="actions" style="justify-content:center"><button class="btn primary" type="button" data-act="import">Upload timetable or slip</button><button class="btn" type="button" data-act="add">Add a course</button></div></div>')+
+    '<div class="panel-foot"><span style="color:var(--muted);font-size:13px">Saved automatically on this device.</span><button class="btn ghost danger" type="button" data-act="delSem" id="delSemBtn">Delete semester</button></div>';
+  renderSemStats();
+}
+function renderTarget(){
+  var all = agg(allCourses());
+  var T = parseFloat($("tTarget").value), c = num($("tCredits").value);
+  var out = $("tOut");
+  if(!c || c<=0){ out.innerHTML = "Enter the credit hours you will take."; return; }
+  if(!all.c){ out.innerHTML = "<b>"+fmt(T)+"</b>average needed. Add some marks to see a more useful answer."; return; }
+  var need = (T*(all.c+c) - all.w)/c;
+  if(need>100) out.innerHTML = "<b>Not reachable this semester</b>You would need "+fmt(need)+" on average. Spread the climb over more semesters.";
+  else if(need<=0) out.innerHTML = "<b>Already safe</b>Even a 0 average in "+c+" credits keeps you at "+fmt(all.w/(all.c+c))+" or above "+T+".";
+  else out.innerHTML = "<b>"+fmt(need)+" average</b>across "+c+" credit hours brings your CWA to "+T+".";
+}
+function renderAll(){ renderPanel(); renderSummary(); }
+
+/* ---------- toast ---------- */
+var toastTimer, undoFn;
+function toast(msg, undo){
+  $("toastMsg").textContent = msg; undoFn = undo; $("toastUndo").hidden = !undo; $("toast").hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(function(){ $("toast").hidden = true; undoFn=null; }, 5000);
+}
+$("toastUndo").addEventListener("click", function(){ if(undoFn){ undoFn(); undoFn=null; } $("toast").hidden = true; });
+
+/* ---------- events ---------- */
+function leaveDemo(){ if(state.demo){ state.demo=false; } }
+function newSemester(){
+  leaveDemo();
+  var n = state.semesters.length;
+  var y = Math.floor(n/2)+1, sem = n%2+1;
+  var s = {id:uid(), name:"Year "+y+", Semester "+sem, courses:[]};
+  state.semesters.push(s); state.active = s.id; save(); renderAll();
+  return s;
+}
+function addCourse(){
+  var s = activeSem() || newSemester(); leaveDemo();
+  var c = {id:uid(), code:"", name:"", credits:null, mark:null};
+  s.courses.push(c); save(); renderAll();
+  var el = document.querySelector('input[data-id="'+c.id+'"][data-f="code"]'); if(el) el.focus();
+}
+document.addEventListener("click", function(e){
+  var t = e.target.closest("button"); if(!t) return;
+  if(t.dataset.sem){ state.active = t.dataset.sem; save(); renderAll(); return; }
+  if(t.id==="addSem"){ newSemester(); return; }
+  if(t.dataset.del){
+    var s = activeSem(), i = s.courses.findIndex(function(c){ return c.id===t.dataset.del; });
+    if(i<0) return; var removed = s.courses.splice(i,1)[0]; leaveDemo(); save(); renderAll();
+    toast("Removed " + (removed.code||"course"), function(){ s.courses.splice(i,0,removed); save(); renderAll(); });
+    return;
+  }
+  var act = t.dataset.act;
+  if(act==="add") addCourse();
+  else if(act==="import") openImport();
+  else if(act==="newSem") newSemester();
+  else if(act==="delSem"){
+    if(t.dataset.armed!=="1"){ t.dataset.armed="1"; t.textContent="Tap again to delete"; setTimeout(function(){ if(t.isConnected){ t.dataset.armed=""; t.textContent="Delete semester"; } },3500); return; }
+    var idx = state.semesters.findIndex(function(x){ return x.id===state.active; });
+    var gone = state.semesters.splice(idx,1)[0]; leaveDemo();
+    state.active = (state.semesters[Math.max(0,idx-1)]||{}).id; save(); renderAll();
+    toast("Deleted " + gone.name, function(){ state.semesters.splice(idx,0,gone); state.active = gone.id; save(); renderAll(); });
+  }
+});
+document.addEventListener("input", function(e){
+  var el = e.target;
+  if(el.id==="semName"){ var s = activeSem(); s.name = el.value; leaveDemo(); save(); renderTabs(); return; }
+  if(el.id==="tTarget"||el.id==="tCredits"){ renderTarget(); return; }
+  var id = el.dataset.id, f = el.dataset.f; if(!id||!f) return;
+  var c = activeSem().courses.find(function(x){ return x.id===id; }); if(!c) return;
+  leaveDemo();
+  if(f==="code") c.code = el.value.toUpperCase();
+  else if(f==="name") c.name = el.value;
+  else if(f==="credits"){ c.credits = num(el.value); el.classList.toggle("missing", !isCred(c.credits)); }
+  else if(f==="mark"){ var m = num(el.value); el.classList.toggle("bad", m!=null && !isMark(m)); c.mark = isMark(m)? m : null; }
+  save(); renderSummary();
+});
+document.addEventListener("keydown", function(e){
+  if(e.key==="Enter" && e.target.matches("td input")){
+    e.preventDefault();
+    var inputs = Array.prototype.slice.call(document.querySelectorAll('td input[data-f="'+e.target.dataset.f+'"]'));
+    var i = inputs.indexOf(e.target);
+    if(i>-1 && inputs[i+1]) inputs[i+1].focus(); else if(e.target.dataset.f==="mark") e.target.blur(); else addCourse();
+  }
+  if(e.key==="Escape" && !$("importOverlay").hidden) closeImport();
+});
+$("clearDemo").addEventListener("click", function(){
+  state = {v:1, demo:false, active:null, semesters:[]}; newSemester();
+  toast("Ready for your courses. Upload your timetable to start.");
+});
+
+/* ================= Import / detection ================= */
+var detected = [];
+function openImport(){
+  $("importOverlay").hidden = false; resetImport();
+  var sel = $("impTarget"); var a = activeSem();
+  sel.innerHTML = state.semesters.map(function(s){ return '<option value="'+s.id+'"'+(a&&s.id===a.id?" selected":"")+'>'+esc(s.name)+'</option>'; }).join("") + '<option value="__new">A new semester</option>';
+  if(!state.semesters.length) sel.value = "__new";
+}
+function closeImport(){ $("importOverlay").hidden = true; }
+function resetImport(){
+  $("impPick").hidden = false; $("impReview").hidden = true; $("impFoot").hidden = true; $("impStatus").hidden = true;
+  $("fileInput").value = ""; detected = [];
+}
+function status(msg, kind){
+  var s = $("impStatus"); s.hidden = false; s.className = "status" + (kind==="err"?" err":"");
+  s.innerHTML = (kind==="busy"?'<span class="spin"></span>':"") + "<span>"+msg+"</span>";
+}
+$("openImport").addEventListener("click", openImport);
+$("closeImport").addEventListener("click", closeImport);
+$("importOverlay").addEventListener("click", function(e){ if(e.target.id==="importOverlay") closeImport(); });
+$("impAgain").addEventListener("click", resetImport);
+var drop = $("drop");
+["dragenter","dragover"].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add("over"); }); });
+["dragleave","drop"].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove("over"); }); });
+drop.addEventListener("drop", function(e){ var f = e.dataTransfer.files[0]; if(f) handleFile(f); });
+$("fileInput").addEventListener("change", function(e){ var f = e.target.files[0]; if(f) handleFile(f); });
+$("parsePaste").addEventListener("click", function(){
+  var list = parseCourses($("pasteBox").value);
+  if(!list.length){ status("No course codes found in that text. Course codes look like COE 351 or MATH 151.", "err"); return; }
+  showReview(list, "Found in the pasted text");
+});
+
+/* ---- script loading ---- */
+var loaded = {};
+function loadScript(src){
+  if(loaded[src]) return loaded[src];
+  loaded[src] = new Promise(function(res, rej){ var s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = function(){ delete loaded[src]; rej(new Error("load "+src)); }; document.head.appendChild(s); });
+  return loaded[src];
+}
+var PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+async function pdfLib(){
+  await loadScript(PDFJS + "pdf.min.js");
+  await loadScript(PDFJS + "pdf.worker.min.js"); // runs on the main thread, so no worker file is needed
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + "pdf.worker.min.js";
+  return window.pdfjsLib;
+}
+
+/* ---- Claude vision, where the page is opened on claude.ai ---- */
+var samplePromise = (window.claude && window.claude.use) ? window.claude.use("sample").catch(function(){ return null; }) : Promise.resolve(null);
+async function visionSample(){
+  var s = await Promise.race([samplePromise, new Promise(function(r){ setTimeout(function(){ r(null); }, 3000); })]);
+  if(!s) return null;
+  try{ var lim = await s.limits(); if(!lim || !lim.images) return null; }catch(e){ return null; }
+  return s;
+}
+var VISION_PROMPT = "This image is a KNUST (Kwame Nkrumah University of Science and Technology) student's timetable or course registration slip. List every distinct course on it.\n"+
+  "Return JSON only, in this shape: {\"courses\":[{\"code\":\"COE 351\",\"name\":\"Signals and Systems\",\"credits\":3}]}\n"+
+  "Rules: code is the department letters, one space, then the digits (e.g. MATH 151). Use the full course title as printed, in Title Case. credits is the credit hours as a number if it is shown, otherwise null. "+
+  "List each course once even if it appears in several timetable slots. Skip rooms, lecturers, times and totals. If no courses are visible return {\"courses\":[]}.";
+
+/* ---- OCR for when the page is hosted on its own ---- */
+async function ocr(blobs){
+  await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js");
+  var worker = await window.Tesseract.createWorker("eng", 1, { logger: function(m){
+    if(m.status==="recognizing text") status("Reading the text... " + Math.round(m.progress*100) + "%", "busy");
+  }});
+  var text = "";
+  try{ for(var i=0;i<blobs.length;i++){ var r = await worker.recognize(blobs[i]); text += "\n" + r.data.text; } }
+  finally{ worker.terminate(); }
+  return text;
+}
+
+async function pdfText(file){
+  var lib = await pdfLib();
+  var doc = await lib.getDocument({data: new Uint8Array(await file.arrayBuffer()), disableFontFace:true, isEvalSupported:false}).promise;
+  var out = [];
+  for(var p=1; p<=Math.min(doc.numPages,6); p++){
+    var page = await doc.getPage(p); var tc = await page.getTextContent();
+    var lines = [];
+    tc.items.forEach(function(it){
+      if(!it.str || !it.str.trim()) return;
+      var y = it.transform[5], x = it.transform[4];
+      var line = lines.find(function(l){ return Math.abs(l.y - y) < 3; });
+      if(!line){ line = {y:y, parts:[]}; lines.push(line); }
+      line.parts.push({x:x, s:it.str});
+    });
+    lines.sort(function(a,b){ return b.y-a.y; });
+    lines.forEach(function(l){ l.parts.sort(function(a,b){ return a.x-b.x; }); out.push(l.parts.map(function(q){ return q.s; }).join("   ")); });
+  }
+  return {text: out.join("\n"), doc: doc};
+}
+async function pdfImages(doc){
+  var blobs = [];
+  for(var p=1; p<=Math.min(doc.numPages,3); p++){
+    var page = await doc.getPage(p); var vp = page.getViewport({scale:2});
+    var cv = document.createElement("canvas"); cv.width = vp.width; cv.height = vp.height;
+    await page.render({canvasContext: cv.getContext("2d"), viewport: vp}).promise;
+    blobs.push(await new Promise(function(r){ cv.toBlob(r, "image/png"); }));
+  }
+  return blobs;
+}
+async function shrink(file){
+  // Large phone photos: scale to 2000px on the long side to keep reading fast.
+  try{
+    var bmp = await createImageBitmap(file); var max = 2000, sc = Math.min(1, max/Math.max(bmp.width,bmp.height));
+    if(sc===1 && file.size < 3e6) return file;
+    var cv = document.createElement("canvas"); cv.width = Math.round(bmp.width*sc); cv.height = Math.round(bmp.height*sc);
+    cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);
+    return await new Promise(function(r){ cv.toBlob(r, "image/jpeg", .9); });
+  }catch(e){ return file; }
+}
+
+async function readImages(blobs){
+  var s = await visionSample();
+  if(s){
+    status("Reading your courses... this can take up to a minute.", "busy");
+    try{
+      var res = await s.json(VISION_PROMPT, {images: blobs, modelTier:"default"});
+      var list = normalise((res && res.courses) || []);
+      if(list.length) return {list:list, how:"Read from your image"};
+    }catch(e){ if(e && e.code==="not_granted"){ /* fall through to OCR */ } }
+  }
+  status("Reading the text in your image...", "busy");
+  var text = await ocr(blobs);
+  return {list: parseCourses(text), how:"Read from your image with text recognition. Check the names and credits."};
+}
+
+async function handleFile(file){
+  $("impPick").hidden = true;
+  try{
+    var r;
+    if(file.type==="application/pdf" || /\.pdf$/i.test(file.name)){
+      status("Opening the PDF...", "busy");
+      var pt = await pdfText(file);
+      var list = parseCourses(pt.text);
+      if(list.length) r = {list:list, how:"Read from the text in your PDF"};
+      else { status("This PDF is a scan. Reading it as an image...", "busy"); r = await readImages(await pdfImages(pt.doc)); }
+    } else if(/^image\//.test(file.type) || /\.(jpe?g|png|webp|gif|bmp)$/i.test(file.name)){
+      r = await readImages([await shrink(file)]);
+    } else {
+      throw new Error("type");
+    }
+    if(!r.list.length){
+      status("No course codes were found in that file. Try a sharper photo taken straight on, paste the slip text, or add the courses by hand.", "err");
+      $("impPick").hidden = false; return;
+    }
+    showReview(r.list, r.how);
+  }catch(err){
+    console.error(err);
+    var msg = (err && err.message==="type") ? "That file type is not supported. Use a JPG, PNG or PDF." :
+      "The file could not be read here. Paste the text of your registration slip below, or add the courses by hand.";
+    status(msg, "err"); $("impPick").hidden = false; $("fileInput").value = "";
+  }
+}
+
+/* ---- text parser for slips and timetables ---- */
+var NOT_COURSES = /^(ROOM|RM|LAB|PAGE|TEL|BOX|PB|FF|SF|GF|LT|LTH|VCR|NO|YEAR|LEVEL|SEM|BLOCK|HALL|TOTAL|REF|ID|INDEX|PIN|AM|PM|GMT)$/;
+function titleCase(s){
+  return s.toLowerCase().replace(/\b([a-z])([a-z]*)/g, function(m,a,b){ return /^(and|of|in|to|for|the|with|i|ii|iii|iv)$/.test(m) && !/^(i|ii|iii|iv)$/.test(m) ? m : (/^(i|ii|iii|iv)$/.test(m) ? m.toUpperCase() : a.toUpperCase()+b); })
+    .replace(/^./, function(c){ return c.toUpperCase(); });
+}
+function cleanName(s){
+  s = s.replace(/\b\d{1,2}[:.]\d{2}\s*(am|pm)?\b/gi," ").replace(/[|_*•#~=<>\[\]{}]+/g," ").replace(/\s{2,}/g," ").trim();
+  s = s.replace(/^[^A-Za-z(]+|[^A-Za-z)]+$/g,"").trim();
+  if(s.length>3 && s===s.toUpperCase()) s = titleCase(s);
+  return s;
+}
+function parseCourses(text){
+  var lines = String(text||"").replace(/\r/g,"").split("\n");
+  var map = {}, order = [];
+  var codeRe = /\b([A-Za-z]{2,5})\s?[-\/]?\s?(\d{3})([A-Za-z])?\b/g;
+  lines.forEach(function(line, li){
+    var m, hits = [];
+    codeRe.lastIndex = 0;
+    while((m = codeRe.exec(line))){
+      var dept = m[1].toUpperCase();
+      if(NOT_COURSES.test(dept)) continue;
+      if(m[1] !== dept && m[1] !== m[1].toLowerCase() && !/^[A-Z][a-z]+$/.test(m[1])) continue; // MiXeD = noise
+      if(/^[a-z]/.test(m[1]) && m[1].length>4) continue;
+      hits.push({code: dept+" "+m[2]+(m[3]?m[3].toUpperCase():""), start:m.index, end:m.index+m[0].length});
+    }
+    hits.forEach(function(h, hi){
+      var rest = line.slice(h.end, hi+1<hits.length ? hits[hi+1].start : line.length);
+      var tokens = rest.trim().split(/\s+/).filter(Boolean);
+      while(tokens.length && /^(core|elective|required|compulsory|optional|registered|approved|yes|no|c|e|r|\W+)$/i.test(tokens[tokens.length-1])) tokens.pop();
+      var credits = null;
+      // Credits: a lone small number after the title (e.g. "3" or "3.0")
+      for(var k=tokens.length-1; k>=0; k--){
+        if(/^[1-9](\.0)?$/.test(tokens[k]) && k>0){ credits = parseInt(tokens[k],10); tokens = tokens.slice(0,k); break; }
+        if(/^\d+(\.\d+)?$/.test(tokens[k])) { tokens = tokens.slice(0,k); continue; }
+        break;
+      }
+      var name = cleanName(tokens.join(" "));
+      if(!/\s/.test(name) && name.length<=5) name = ""; // venue codes like VSLA or PB012
+      if(name.length<3){
+        var nx = (lines[li+1]||"").trim();
+        if(nx && !codeRe.test(nx) && /[A-Za-z]{4,}/.test(nx)) name = cleanName(nx.replace(/\s+\d(\.0)?\s*$/,""));
+        codeRe.lastIndex = 0;
+      }
+      if(!name || name.length<3){
+        // Timetables often show the title before the code
+        var before = line.slice(hi>0?hits[hi-1].end:0, h.start);
+        var bn = cleanName(before); if(bn.length>=4 && bn.split(" ").length<=8) name = bn;
+      }
+      if(map[h.code]){
+        var e = map[h.code];
+        if((!e.name || e.name.length<name.length) && name.length<70) e.name = name;
+        if(e.credits==null && credits!=null) e.credits = credits;
+      } else {
+        map[h.code] = {code:h.code, name:name.length<70?name:name.slice(0,70), credits:credits};
+        order.push(h.code);
+      }
+    });
+  });
+  return order.map(function(k){ return map[k]; });
+}
+function normalise(arr){
+  var seen = {};
+  return arr.map(function(c){
+    var code = String(c.code||"").toUpperCase().replace(/\s+/g," ").replace(/^([A-Z]+)\s?(\d)/,"$1 $2").trim();
+    var cr = num(c.credits);
+    return {code:code, name:String(c.name||"").trim(), credits: isCred(cr)? cr : null};
+  }).filter(function(c){ if(!c.code || seen[c.code]) return false; seen[c.code]=1; return true; });
+}
+
+function showReview(list, how){
+  detected = list.map(function(c){ return {code:c.code, name:c.name, credits:c.credits, keep:true}; });
+  var existing = {}; if(!state.demo) allCourses().forEach(function(c){ existing[c.code.replace(/\s/g,"")] = 1; });
+  var missingCr = detected.filter(function(c){ return c.credits==null; }).length;
+  $("impPick").hidden = true;
+  status(esc(how) + ". Found <b>" + detected.length + "</b> course" + (detected.length===1?"":"s") + "." +
+    (missingCr ? " Fill in the " + missingCr + " highlighted credit hour" + (missingCr===1?"":"s") + " (timetables usually leave these out)." : ""));
+  $("reviewRows").innerHTML = detected.map(function(c, i){
+    var dup = existing[c.code.replace(/\s/g,"")];
+    return '<div class="review-row"><input type="checkbox" data-i="'+i+'" data-k="keep" '+(dup?"":"checked")+' aria-label="Include '+esc(c.code)+'" title="'+(dup?"Already in your list":"Include")+'">'+
+      '<input type="text" class="code" data-i="'+i+'" data-k="code" value="'+esc(c.code)+'" aria-label="Code">'+
+      '<input type="text" data-i="'+i+'" data-k="name" value="'+esc(c.name)+'" placeholder="Course name" aria-label="Name">'+
+      '<input type="number" class="cr'+(c.credits==null?" missing":"")+'" data-i="'+i+'" data-k="credits" value="'+(c.credits==null?"":c.credits)+'" min="0" max="12" placeholder="?" aria-label="Credits"></div>';
+  }).join("");
+  detected.forEach(function(c, i){ if(existing[c.code.replace(/\s/g,"")]) c.keep = false; });
+  $("impReview").hidden = false; $("impFoot").hidden = false;
+}
+$("reviewRows").addEventListener("input", function(e){
+  var el = e.target, i = +el.dataset.i, k = el.dataset.k; if(isNaN(i)) return;
+  if(k==="keep") detected[i].keep = el.checked;
+  else if(k==="credits"){ detected[i].credits = num(el.value); el.classList.toggle("missing", !isCred(detected[i].credits)); }
+  else if(k==="code") detected[i].code = el.value.toUpperCase();
+  else detected[i][k] = el.value;
+});
+$("impSave").addEventListener("click", function(){
+  var picked = detected.filter(function(c){ return c.keep && c.code.trim(); });
+  if(!picked.length){ status("Tick at least one course to add.", "err"); return; }
+  if(state.demo){ state = {v:1, demo:false, active:null, semesters:[]}; }
+  var target = $("impTarget").value;
+  var sem = state.semesters.find(function(s){ return s.id===target; });
+  if(!sem){ sem = newSemester(); }
+  picked.forEach(function(c){ sem.courses.push({id:uid(), code:c.code.trim(), name:c.name.trim(), credits:isCred(c.credits)?c.credits:null, mark:null}); });
+  state.active = sem.id; save(); renderAll(); closeImport();
+  toast("Added " + picked.length + " course" + (picked.length===1?"":"s") + " to " + sem.name + ". Enter your marks when results are out.");
+});
+
+/* expose the parser for testing */
+window.__cwa = {parseCourses: parseCourses, agg: agg};
+renderAll();
+})();
+</script>
+</body></html>
