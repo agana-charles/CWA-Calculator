@@ -273,6 +273,30 @@ details.paste textarea{width:100%;min-height:120px;margin-top:10px;border:1px so
   td input.cr::placeholder{color:var(--muted)}
   td input[data-f="name"]{color:var(--muted);font-size:14px;padding-block:4px}
 }
+
+/* Momentum pop-up */
+.hype-layer{position:fixed;inset:0;z-index:70;display:grid;place-items:center;pointer-events:none;padding:max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
+.hype-layer::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 50%, var(--hype-glow) 0%, transparent 60%);opacity:0;animation:hypeGlow 3.6s ease forwards}
+.hype{position:relative;pointer-events:auto;cursor:pointer;width:min(420px,100%);border-radius:22px;padding:26px 24px 22px;text-align:center;color:#fff;background:var(--hype-bg);box-shadow:0 24px 60px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.12) inset;display:grid;gap:8px;justify-items:center;animation:hypeIn .7s cubic-bezier(.18,1.6,.4,1) both}
+.hype.out{animation:hypeOut .35s cubic-bezier(.4,0,1,1) forwards}
+.hype.down{animation:hypeIn .7s cubic-bezier(.18,1.6,.4,1) both, hypeShake .5s .55s ease-in-out}
+.hype-emoji{font-size:54px;line-height:1;animation:hypeBounce .9s .25s cubic-bezier(.2,1.8,.4,1) both}
+.hype-title{font-family:var(--f-display);font-weight:800;font-size:clamp(30px,8vw,42px);letter-spacing:.01em;line-height:1;text-transform:uppercase;text-shadow:0 3px 0 rgba(0,0,0,.18);animation:hypeTitle .6s .15s cubic-bezier(.2,1.5,.4,1) both}
+.hype-sub{font-size:15px;opacity:.95;max-width:32ch}
+.hype-delta{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-num);font-weight:700;font-size:15px;background:rgba(0,0,0,.22);padding:6px 12px;border-radius:999px}
+.hype-hint{font-size:12px;opacity:.7;margin-top:4px}
+.hype.up{--hype-bg:linear-gradient(140deg,#ff9a1f 0%,#ff5e1a 45%,#d6182b 100%)}
+.hype.down{--hype-bg:linear-gradient(140deg,#24346b 0%,#3b2a7a 55%,#6a1f5c 100%)}
+.hype-layer.up{--hype-glow:rgba(255,120,30,.35)}
+.hype-layer.down{--hype-glow:rgba(80,90,200,.30)}
+.flame{position:fixed;bottom:-40px;font-size:var(--sz,28px);pointer-events:none;z-index:71;animation:flameUp var(--dur,2.2s) var(--delay,0s) cubic-bezier(.25,.6,.35,1) forwards;opacity:0}
+@keyframes hypeIn{0%{opacity:0;transform:scale(.4) translateY(40px) rotate(-6deg)}60%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes hypeOut{to{opacity:0;transform:scale(.85) translateY(20px)}}
+@keyframes hypeShake{0%,100%{transform:none}20%{transform:translateX(-10px) rotate(-1.5deg)}40%{transform:translateX(9px) rotate(1.5deg)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+@keyframes hypeBounce{0%{transform:scale(0) rotate(-30deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes hypeTitle{0%{opacity:0;transform:scale(1.6);letter-spacing:.2em}100%{opacity:1;transform:none}}
+@keyframes hypeGlow{0%{opacity:0}15%{opacity:1}75%{opacity:1}100%{opacity:0}}
+@keyframes flameUp{0%{opacity:0;transform:translate(0,0) scale(.6) rotate(0)}12%{opacity:1}80%{opacity:1}100%{opacity:0;transform:translate(var(--dx,0px),calc(-100vh - 60px)) scale(1.15) rotate(var(--rot,20deg))}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -435,6 +459,7 @@ details.paste textarea{width:100%;min-height:120px;margin-top:10px;border:1px so
   </div>
 </div>
 
+<div class="hype-layer" id="hypeLayer" hidden><div class="hype" id="hype" role="status" aria-live="polite"><div class="hype-emoji" id="hypeEmoji"></div><div class="hype-title" id="hypeTitle"></div><div class="hype-delta" id="hypeDelta"></div><div class="hype-sub" id="hypeSub"></div><div class="hype-hint">Tap to close</div></div></div>
 <div class="toast" id="toast" hidden><span id="toastMsg"></span><button id="toastUndo" type="button">Undo</button></div>
 
 <script>
@@ -1048,7 +1073,71 @@ $("impSave").addEventListener("click", function(){
 });
 
 /* expose the parser for testing */
-window.__cwa = {parseCourses: parseCourses, agg: agg, planCalc: planCalc};
+
+/* ---------- momentum pop-ups ---------- */
+var HYPE = {
+  up:   [{t:"Heat Baba", e:"🔥🔥🔥"}, {t:"You're on fire", e:"🔥"}],
+  down: [{t:"Lock in", e:"🔒"}, {t:"Gear up", e:"⚙️"}]
+};
+var hypeShown = {}, hypeTimer, reduceMotion = false;
+try{ reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+function prevSemAvg(sem){
+  var i = state.semesters.indexOf(sem);
+  for(var j=i-1;j>=0;j--){ var a = agg(state.semesters[j].courses).avg; if(a!=null) return {avg:a, name:state.semesters[j].name}; }
+  return null;
+}
+function checkMomentum(sem, cwaBefore){
+  if(!sem) return;
+  var cur = agg(sem.courses).avg; if(cur==null) return;
+  var prev = prevSemAvg(sem), dir = null, from, to = cur, label;
+  if(prev){ from = prev.avg; label = "vs " + prev.name; }
+  else { var cwaNow = agg(allCourses()).avg; if(cwaBefore==null || cwaNow==null) return; from = cwaBefore; to = cwaNow; label = "CWA"; }
+  if(Math.abs(to-from) < 0.005) return;
+  dir = to > from ? "up" : "down";
+  if(hypeShown[sem.id]===dir) return; // only pop when the direction changes
+  hypeShown[sem.id] = dir;
+  showHype(dir, from, to, label, sem.name, !!prev);
+}
+function showHype(dir, from, to, label, semName, vsSem){
+  var pick = HYPE[dir][Math.floor(Math.random()*HYPE[dir].length)];
+  var layer = $("hypeLayer"), card = $("hype");
+  layer.className = "hype-layer " + dir; card.className = "hype " + dir;
+  $("hypeEmoji").textContent = pick.e;
+  $("hypeTitle").textContent = pick.t + (dir==="up" && pick.e.length<3 ? " 🔥" : "");
+  $("hypeDelta").textContent = fmt(from) + " → " + fmt(to) + "  (" + (to>from?"+":"") + fmt(to-from) + ")";
+  $("hypeSub").textContent = vsSem
+    ? (dir==="up" ? semName + " is beating your last semester. Keep the heat on." : semName + " is below your last semester. Time to lock in, you can turn it around.")
+    : (dir==="up" ? "Your CWA just went up. Keep stacking those marks." : "Your CWA just dipped. Lock in for the next one.");
+  layer.hidden = false;
+  void card.offsetWidth; // restart the animation
+  document.querySelectorAll(".flame").forEach(function(f){ f.remove(); });
+  if(dir==="up" && !reduceMotion){
+    for(var i=0;i<18;i++){
+      var f = document.createElement("span"); f.className = "flame"; f.textContent = "🔥"; f.setAttribute("aria-hidden","true");
+      f.style.left = (4 + Math.random()*92) + "%";
+      f.style.setProperty("--sz", (20 + Math.random()*26) + "px");
+      f.style.setProperty("--dur", (1.8 + Math.random()*1.4) + "s");
+      f.style.setProperty("--delay", (Math.random()*0.6) + "s");
+      f.style.setProperty("--dx", (Math.random()*120-60) + "px");
+      f.style.setProperty("--rot", (Math.random()*60-30) + "deg");
+      document.body.appendChild(f);
+      f.addEventListener("animationend", function(){ this.remove(); });
+    }
+  }
+  clearTimeout(hypeTimer); hypeTimer = setTimeout(hideHype, 3800);
+}
+function hideHype(){
+  var card = $("hype"); if($("hypeLayer").hidden) return;
+  card.classList.add("out");
+  setTimeout(function(){ $("hypeLayer").hidden = true; card.classList.remove("out"); }, reduceMotion ? 0 : 340);
+}
+$("hype").addEventListener("click", function(){ clearTimeout(hypeTimer); hideHype(); });
+var cwaAtFocus = null;
+document.addEventListener("focusin", function(e){ if(e.target.matches && e.target.matches('input[data-f="mark"]')) cwaAtFocus = agg(allCourses()).avg; });
+document.addEventListener("change", function(e){
+  if(e.target.matches && e.target.matches('input[data-f="mark"]')) checkMomentum(activeSem(), cwaAtFocus);
+});
+window.__cwa = {showHype: function(d){ showHype(d, 65.2, d==='up'?71.4:58.9, '', 'Year 1, Semester 2', true); }, parseCourses: parseCourses, agg: agg, planCalc: planCalc};
 try{ document.getElementById("yr").textContent = new Date().getFullYear(); }catch(e){}
 renderAll();
 })();
